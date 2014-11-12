@@ -1,0 +1,8 @@
+# Data files
+/Bulk Order*
+
+# python files
+*.pyc
+
+# project files
+/.idea
