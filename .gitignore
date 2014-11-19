@@ -1,8 +1,14 @@
 # Data files
 /Bulk Order*
+/tmp
 
 # python files
 *.pyc
 
 # project files
 /.idea
+
+# Sandbox files
+sandbox.py
+
+
