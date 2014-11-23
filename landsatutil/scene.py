@@ -10,6 +10,9 @@ from skimage.io import imread
 from os.path import isdir, basename, join
 from os import listdir
 
+# Constants
+TMP_DIR = 'tmp'
+
 
 class LandsatScene(object):
 
@@ -22,7 +25,7 @@ class LandsatScene(object):
         """
 
         # Check if the archive has already been extracted
-        self.archive_name = join('tmp', basename(archive_path).split('.')[0])
+        self.archive_name = join(TMP_DIR, basename(archive_path).split('.')[0])
         if not isdir(self.archive_name):
             archive = tarfile.open(archive_path)
             archive.extractall(self.archive_name)
@@ -143,7 +146,7 @@ class LandsatScene(object):
         :return: Scene subimage at at the desired coordinates as numpy float array
         """
         # Read the file
-        image_file = '{0}/{0}_B{1:d}.TIF'.format(self.scene_id, band)
+        image_file = '{0}/{1}/{1}_B{2:d}.TIF'.format(TMP_DIR, self.scene_id, band)
         band_image = float_(imread(image_file))
 
         # Get pixel coordinates
