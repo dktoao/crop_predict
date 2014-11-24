@@ -5,7 +5,7 @@ Tools for temporal data extraction
 # Imports
 from os import listdir
 from os.path import join
-from numpy import min, max, average, empty, array
+from numpy import min, max, average, zeros
 from skimage.util import img_as_uint
 
 from .scene import LandsatScene
@@ -42,9 +42,10 @@ def collect_bands(band, nw_coords, se_coords, year_list, directory):
     y_extent = min([image.shape[0] for image in subimage_list])
     x_extent = min([image.shape[1] for image in subimage_list])
 
-    temporal_image = empty((len(subimage_list), y_extent, x_extent))
+    # Average on the fly
+    temporal_image = zeros((y_extent, x_extent))
     for n, image in enumerate(subimage_list):
-        temporal_image[n, :, :] = image[:y_extent, :x_extent]
+        temporal_image = ((temporal_image * n) + image[0:y_extent, 0:x_extent])/(n + 1)
 
     return temporal_image
 
@@ -56,12 +57,10 @@ def compress_temporal_image(temporal_image):
     :param temporal_image: Image to compress
     :return: 2D numpy image array of type ubyte
     """
-    # Take average of frames
-    average_image = average(temporal_image, 0)
 
     # Normalize the image to values between [-1 and 1]
-    image_center = average([min(average_image), max(average_image)])
-    image_shift = average_image - image_center
+    image_center = average([min(temporal_image), max(temporal_image)])
+    image_shift = temporal_image - image_center
     image_normalized = image_shift/max([-min(image_shift), max(image_shift)])
 
     # Change image to a ubyte and return

@@ -91,6 +91,20 @@ class LandsatScene(object):
 
             n += 1
 
+        # Get the date of the scene
+        date_str = self.metadata['PRODUCT_METADATA/DATE_ACQUIRED']
+        date = [int_(x) for x in date_str.split('-')]
+        self.year = date[0]
+        self.month = date[1]
+        self.day = date[2]
+
+        # Get the time of the scene
+        time_str = self.metadata['PRODUCT_METADATA/SCENE_CENTER_TIME'].split('.')[0]
+        time = [int_(x) for x in time_str.split(':')]
+        self.hour = time[0]
+        self.minute = time[1]
+        self.second = time[2]
+
     def _read_metadata(self):
         """
         Extract contents of metadata file into a dictionary
