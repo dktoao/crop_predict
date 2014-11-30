@@ -6,6 +6,7 @@ from numpy import array, where, mean, var
 from skimage.io import imread, use_plugin
 from os import listdir
 from pandas import read_csv
+import matplotlib.pyplot as plt
 
 from landsatutil.scene import LandsatScene
 
@@ -69,9 +70,16 @@ for line in field_props.iterrows():
             field_reflectance = fscene.get_band_subimage(band, nw_corner_field, se_corner_field)
             single_field_mask = field_mask[props['nw_col']:props['se_col'],
                                            props['nw_row']:props['se_row']]/field_label
-            field_reflectance *= field_reflectance * single_field_mask
-            reflectance.append(mean(field_reflectance[where(field_reflectance != 0)]))
-            reflectance.append(var(field_reflectance[where(field_reflectance != 0)]))
+            field_reflectance2 = field_reflectance * single_field_mask
+            reflectance.append(mean(field_reflectance2[where(field_reflectance2 != 0)]))
+            reflectance.append(var(field_reflectance2[where(field_reflectance2 != 0)]))
+
+            # Plots
+            #f, ax = plt.subplots(1, 3)
+            #ax[0].imshow(field_reflectance)
+            #ax[1].imshow(single_field_mask)
+            #ax[2].imshow(field_reflectance2)
+            #plt.show()
 
         data_list = [field_label, year, month, day, hour] + reflectance
         data_list = [str(x) for x in data_list]
