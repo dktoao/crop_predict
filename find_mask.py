@@ -2,7 +2,7 @@
 Scipt that finds a crop field mask from satellite data
 """
 
-from numpy import array, logical_not, logical_and, int_, uint16, max, pi
+from numpy import array, logical_not, logical_and, int_, uint8, max, pi
 import matplotlib.pyplot as plt
 from skimage.io import imsave, use_plugin
 from skimage.transform import hough_line, hough_line_peaks
@@ -38,7 +38,7 @@ temporal_band_4 = collect_bands(
     4,
     nw_corner,
     se_corner,
-    list(range(2000, 2010)),
+    list(range(2000, 2012)),
     'Bulk Order 397884/L4-5 TM'
 )
 temporal_band_3 = collect_bands(
@@ -103,4 +103,4 @@ plt.show()
 
 # Save the field mask
 save_file_name = fname_template.format('field_mask', 'png')
-imsave(save_file_name, uint16(field_mask)+1)
+imsave(save_file_name, uint8(field_mask)+1)

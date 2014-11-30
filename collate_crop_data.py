@@ -3,11 +3,14 @@ Collates crop data and creates a descriptive csv file
 """
 
 from numpy import array, where, mean, var
-from skimage.io import imread
+from skimage.io import imread, use_plugin
 from os import listdir
 from pandas import read_csv
 
 from landsatutil.scene import LandsatScene
+
+# Change skimage plugin
+use_plugin('freeimage')
 
 # Very small area
 nw_corner = array([396210, 4175310])
@@ -48,7 +51,8 @@ archive_list = [file for file in archive_list if file[9:13] in year_list]
 
 for line in field_props.iterrows():
     props = line[1]
-    field_label = props['label']
+    field_label = int(props['label'])
+    print('Collecting Data for Field: {0:d}'.format(field_label))
     field_indices = where(field_mask == field_label)
     nw_corner_field = array([nw_corner[0] + 30*(props['nw_row']),
                              nw_corner[1] - 30*(props['nw_col'])])
@@ -64,12 +68,11 @@ for line in field_props.iterrows():
         for band in range(1, 8):
             field_reflectance = fscene.get_band_subimage(band, nw_corner_field, se_corner_field)
             single_field_mask = field_mask[props['nw_col']:props['se_col'],
-                                           props['nw_row']:props['se_row']]/props['label']
+                                           props['nw_row']:props['se_row']]/field_label
             field_reflectance *= field_reflectance * single_field_mask
             reflectance.append(mean(field_reflectance[where(field_reflectance != 0)]))
             reflectance.append(var(field_reflectance[where(field_reflectance != 0)]))
 
-        data_list = [props['label'], year, month, day, hour] + reflectance
+        data_list = [field_label, year, month, day, hour] + reflectance
         data_list = [str(x) for x in data_list]
         print(','.join(data_list), file=result)
-
