@@ -41,7 +41,7 @@ def utm_to_latlon(zone, easting, northing, n_hemisphere=True):
     :param easting: UTM easting parameter
     :param northing: UTM northing parameter
     :param n_hemisphere:
-    :return:
+    :return: decimal (latitude, longitude)
     """
     if not n_hemisphere:
         northing = 10000000 - northing
