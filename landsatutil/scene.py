@@ -74,7 +74,7 @@ class LandsatScene(object):
 
         # Get the radiance correction functions
         n = 1
-        self.band_correction = []
+        self.band_correction = [lambda x: 0]
         while True:
             # Get the key names
             data_mult_key = 'RADIOMETRIC_RESCALING/RADIANCE_MULT_BAND_{0:d}'.format(n)
@@ -83,6 +83,7 @@ class LandsatScene(object):
             # Make sure that the key name exists
             if data_mult_key not in self.metadata.keys():
                 break
+                print(data_mult_key)
 
             # create coefficients for linear equation m*x + b
             m = float(self.metadata[data_mult_key])

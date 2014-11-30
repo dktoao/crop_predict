@@ -2,7 +2,7 @@
 Scipt that finds a crop field mask from satellite data
 """
 
-from numpy import array, logical_not, logical_and, int_, uint16, max
+from numpy import array, logical_not, logical_and, int_, uint16, max, pi
 import matplotlib.pyplot as plt
 from skimage.io import imsave, use_plugin
 from skimage.transform import hough_line, hough_line_peaks
@@ -16,13 +16,17 @@ from landsatutil.segmentation import draw_hough_line
 use_plugin('freeimage')
 
 # UTM coordinates zone 13
+# Very small area
+nw_corner = array([396210, 4175310])
+se_corner = array([404460, 4167150])
+
 # Small Area
 #nw_corner = array([390000, 4188090])
 #se_corner = array([423900, 4164000])
 
 # Large Area
-nw_corner = array([387494, 4218065])
-se_corner = array([440000, 4160000])
+#nw_corner = array([387494, 4218065])
+#se_corner = array([440000, 4160000])
 
 # Calculate file names
 fname_post = '_{0}_{1}_{2}_{3}.'.format(nw_corner[0], nw_corner[1], se_corner[0], se_corner[1])
@@ -66,20 +70,22 @@ c_stride = int_(between_fields.shape[1]/num_row_strides)
 for r in range(num_row_strides):
     for c in range(num_col_strides):
         h, theta, d = hough_line(between_fields[r*r_stride:(r+1)*r_stride, c*c_stride:(c+1)*c_stride])
-        threshold = 0.0005*max(h)
+        threshold = 0  #0.0005*max(h)
         h, theta, d = hough_line_peaks(h, theta, d, min_distance=20, threshold=threshold)
         for n in range(len(theta)):
-            if abs(theta[n]) < 0.01 or abs(theta[n]) > 1.4:
+            if abs(theta[n]) < 0.1 or abs(theta[n]) > ((pi/2) - 0.1):
                 draw_hough_line(field_mask[r*r_stride:(r+1)*r_stride, c*c_stride:(c+1)*c_stride], d[n], theta[n])
 
-# Label the field mask
+# do a few small openings and then remove small objects
+#field_mask = binary_opening(field_mask, rectangle(1, 3))
+#field_mask = binary_opening(field_mask, rectangle(3, 1))
 remove_small_objects(field_mask, 100, 1, True)
 field_mask = label(field_mask, 4, 0)
 field_props = regionprops(field_mask)
 
 # Write field_props to csv file
 out_file = open(fname_template.format('field_props', 'csv'), 'w')
-print('label,area,nw_row,nw_col,se_row,se_col', file=out_file)
+print('label,area,nw_col,nw_row,se_col,se_row', file=out_file)
 for prop in field_props:
     print(','.join([str(x) for x in [
         prop.label,
