@@ -1,12 +1,12 @@
 """
-Scipt that finds a crop field mask from satellite data
+Script that finds a crop field mask from satellite data
 """
 
-from numpy import array, logical_not, logical_and, int_, uint8, max, pi
+from numpy import array, logical_not, logical_and, int_, uint8, pi
 import matplotlib.pyplot as plt
 from skimage.io import imsave, use_plugin
 from skimage.transform import hough_line, hough_line_peaks
-from skimage.morphology import disk, white_tophat, binary_closing, rectangle, remove_small_objects, binary_opening
+from skimage.morphology import disk, white_tophat, binary_closing, rectangle, remove_small_objects
 from skimage.measure import label, regionprops
 
 from landsatutil.temporal import collect_bands, compress_temporal_image
@@ -80,16 +80,18 @@ for r in range(num_row_strides):
 #field_mask = binary_opening(field_mask, rectangle(1, 3))
 #field_mask = binary_opening(field_mask, rectangle(3, 1))
 remove_small_objects(field_mask, 100, 1, True)
-field_mask = label(field_mask, 4, 0)
+field_mask = label(field_mask, 4, 0) + 1
 field_props = regionprops(field_mask)
 
 # Write field_props to csv file
 out_file = open(fname_template.format('field_props', 'csv'), 'w')
-print('label,area,nw_col,nw_row,se_col,se_row', file=out_file)
+print('label,area,center_row,center_col,nw_col,nw_row,se_col,se_row', file=out_file)
 for prop in field_props:
     print(','.join([str(x) for x in [
         prop.label,
         prop.area,
+        prop.centroid[0],
+        prop.centroid[1],
         prop.bbox[0],
         prop.bbox[1],
         prop.bbox[2],
@@ -99,8 +101,12 @@ for prop in field_props:
 # Visualize Data
 plt.figure()
 plt.imshow(field_mask)
+
+for prop in field_props:
+    plt.annotate(str(prop.label), xy=array([prop.centroid[1], prop.centroid[0]]))
+
 plt.show()
 
 # Save the field mask
 save_file_name = fname_template.format('field_mask', 'png')
-imsave(save_file_name, uint8(field_mask)+1)
+imsave(save_file_name, uint8(field_mask))
