@@ -6,7 +6,7 @@ from numpy import array, logical_not, logical_and, int_, uint8, pi
 import matplotlib.pyplot as plt
 from skimage.io import imsave, use_plugin
 from skimage.transform import hough_line, hough_line_peaks
-from skimage.morphology import disk, white_tophat, binary_closing, rectangle, remove_small_objects
+from skimage.morphology import disk, white_tophat, binary_closing, binary_opening, rectangle, remove_small_objects
 from skimage.measure import label, regionprops
 
 from landsatutil.temporal import collect_bands, compress_temporal_image
@@ -17,16 +17,16 @@ use_plugin('freeimage')
 
 # UTM coordinates zone 13
 # Very small area
-nw_corner = array([396210, 4175310])
-se_corner = array([404460, 4167150])
+#nw_corner = array([396210, 4175310])
+#se_corner = array([404460, 4167150])
 
 # Small Area
 #nw_corner = array([390000, 4188090])
 #se_corner = array([423900, 4164000])
 
 # Large Area
-#nw_corner = array([387494, 4218065])
-#se_corner = array([440000, 4160000])
+nw_corner = array([387494, 4218065])
+se_corner = array([440000, 4160000])
 
 # Calculate file names
 fname_post = '_{0}_{1}_{2}_{3}.'.format(nw_corner[0], nw_corner[1], se_corner[0], se_corner[1])
@@ -50,6 +50,7 @@ temporal_band_3 = collect_bands(
 )
 temporal_nvdi = temporal_band_4 - temporal_band_3
 field_mask = compress_temporal_image(temporal_nvdi)
+imsave(fname_template.format('temporal_nvdi', 'png'), field_mask)
 print('Detecting Fields')
 field_mask = white_tophat(field_mask, disk(14))
 field_mask = field_mask >= 2
@@ -77,10 +78,11 @@ for r in range(num_row_strides):
                 draw_hough_line(field_mask[r*r_stride:(r+1)*r_stride, c*c_stride:(c+1)*c_stride], d[n], theta[n])
 
 # do a few small openings and then remove small objects
-#field_mask = binary_opening(field_mask, rectangle(1, 3))
-#field_mask = binary_opening(field_mask, rectangle(3, 1))
-remove_small_objects(field_mask, 100, 1, True)
+field_mask = binary_opening(field_mask, rectangle(1, 5))
+field_mask = binary_opening(field_mask, rectangle(5, 1))
+imsave(fname_template.format('segmented_fields', 'png'), field_mask)
 field_mask = label(field_mask, 4, 0) + 1
+remove_small_objects(field_mask, 100, 1, True)
 field_props = regionprops(field_mask)
 
 # Write field_props to csv file
@@ -102,10 +104,12 @@ for prop in field_props:
 plt.figure()
 plt.imshow(field_mask)
 
+'''
 for prop in field_props:
     plt.annotate(str(prop.label), xy=array([prop.centroid[1], prop.centroid[0]]))
-
+'''
 plt.show()
+
 
 # Save the field mask
 save_file_name = fname_template.format('field_mask', 'png')
